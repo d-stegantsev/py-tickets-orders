@@ -46,7 +46,6 @@ class CinemaHallViewSet(viewsets.ModelViewSet):
 
 
 class MovieViewSet(viewsets.ModelViewSet):
-
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
 
@@ -125,6 +124,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
 
 
 class TicketViewSet(viewsets.ModelViewSet):
+    queryset = Ticket.objects.none()
     serializer_class = TicketSerializer
 
     def get_queryset(self):
@@ -136,12 +136,12 @@ class TicketViewSet(viewsets.ModelViewSet):
         return TicketSerializer
 
 
-
 class OrderPagination(LimitOffsetPagination):
     default_limit = 1
 
 
 class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.none()
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
 

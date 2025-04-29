@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from cinema.models import (
     Genre,
@@ -66,10 +67,21 @@ class MovieSessionSerializer(serializers.ModelSerializer):
 
 
 class MovieSessionListSerializer(MovieSessionSerializer):
-    movie_title = serializers.CharField(source="movie.title", read_only=True)
-    cinema_hall_name = serializers.CharField(source="cinema_hall.name", read_only=True)
-    cinema_hall_capacity = serializers.IntegerField(source="cinema_hall.capacity", read_only=True)
-    tickets_available = serializers.IntegerField(source="tickets_available", read_only=True)
+    movie_title = serializers.CharField(
+        source="movie.title",
+        read_only=True
+    )
+    cinema_hall_name = serializers.CharField(
+        source="cinema_hall.name",
+        read_only=True
+    )
+    cinema_hall_capacity = serializers.IntegerField(
+        source="cinema_hall.capacity",
+        read_only=True
+    )
+    tickets_available = serializers.IntegerField(
+        read_only=True
+    )
 
     class Meta:
         model = MovieSession
@@ -81,7 +93,6 @@ class MovieSessionListSerializer(MovieSessionSerializer):
             "cinema_hall_capacity",
             "tickets_available"
         )
-
 
 
 class MovieSessionDetailSerializer(MovieSessionSerializer):
@@ -114,8 +125,6 @@ class TicketListSerializer(TicketSerializer):
         fields = ["id", "row", "seat", "movie_session"]
 
 
-from rest_framework.exceptions import ValidationError
-
 class OrderSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(many=True, read_only=False, allow_empty=False)
 
@@ -134,14 +143,17 @@ class OrderSerializer(serializers.ModelSerializer):
             seat = ticket["seat"]
 
             if (movie_session.id, row, seat) in seen_places:
-                errors.append(f"Duplicate seat in order: row={row}, seat={seat}")
+                errors.append(f"Duplicate seat in "
+                              f"order: row={row}, seat={seat}")
             seen_places.add((movie_session.id, row, seat))
 
             hall = movie_session.cinema_hall
             if not (1 <= row <= hall.rows):
-                errors.append(f"Row {row} is out of range (1–{hall.rows})")
+                errors.append(f"Row {row} is out of "
+                              f"range (1–{hall.rows})")
             if not (1 <= seat <= hall.seats_in_row):
-                errors.append(f"Seat {seat} is out of range (1–{hall.seats_in_row})")
+                errors.append(f"Seat {seat} is out of "
+                              f"range (1–{hall.seats_in_row})")
 
             if Ticket.objects.filter(
                 movie_session=movie_session,
@@ -162,7 +174,6 @@ class OrderSerializer(serializers.ModelSerializer):
             for ticket_data in tickets_data:
                 Ticket.objects.create(order=order, **ticket_data)
             return order
-
 
 
 class OrderListSerializer(OrderSerializer):
