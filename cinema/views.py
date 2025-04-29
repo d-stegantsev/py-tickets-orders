@@ -125,13 +125,16 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
 
 
 class TicketViewSet(viewsets.ModelViewSet):
-    queryset = Ticket.objects.all()
+    serializer_class = TicketSerializer
+
+    def get_queryset(self):
+        return Ticket.objects.filter(order__user=self.request.user)
 
     def get_serializer_class(self):
         if self.action == "list":
             return TicketListSerializer
-
         return TicketSerializer
+
 
 
 class OrderPagination(LimitOffsetPagination):
@@ -139,22 +142,16 @@ class OrderPagination(LimitOffsetPagination):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
 
     def get_queryset(self):
-        queryset = self.queryset.filter(user=self.request.user)
-
-        return queryset
+        return Order.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
     def get_serializer_class(self):
-        serializer = self.serializer_class
-
         if self.action == "list":
             return OrderListSerializer
-
-        return serializer
+        return self.serializer_class
